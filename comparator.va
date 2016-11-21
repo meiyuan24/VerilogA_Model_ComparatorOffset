@@ -1,0 +1,62 @@
+// VerilogA for verilogA, comparator, veriloga
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+// comparator
+//  - comparator
+// sigin: (val,flow)
+// sigref: reference to which 'sigin' is compared (val,flow)
+// sigout: comparator output (val,flow)
+
+
+// Instance parameters
+//		sigout_high 	= maximum output of the comparator (val)
+//		sigout_low		= minimu output of the comparator (val)
+// 		sigin_offset 	= subtract from the ' sigin' before comparison to sigref (val)
+//		comp_slope		= determine the senstivity of the comparator []
+//
+//	compares ('sigin'-'sigin_offset') to 'sigref' - the output is related to their difference by a tanh relationship
+//	If the difference >>> 'sigref', ' sigout' is 'sigout_high'
+//	If the difference = 'sigref', ' sigout' is ('sigout_high'+'sigout_low')/2
+//	If the difference >>> 'sigref', ' sigout' is 'sigout_low'.
+
+module comparator(sigin,sigref,clk,sigout);
+input sigin,sigref,clk;
+output sigout;
+electrical sigin,sigref,clk,sigout;
+parameter real sigout_high = 1.2;
+parameter real sigout_low  = 0;
+parameter real latch = 0.6;
+parameter real sigin_offset=0 from[-0.3:0.3]; // in V
+
+parameter real comp_slope = 1000;
+parameter real std = 0.01;
+parameter integer seed =1;
+parameter real trise =20p from (0:inf);
+parameter real tfall =10p from (0:inf);
+parameter real tdel = 0 from [0:inf);
+
+
+real out_val;
+
+		analog begin
+			@(initial_step) begin
+				if (sigout_high <= sigout_low) begin
+				$display("RAange spes error");
+//				$finish;
+				out_val = 0;
+				end
+		end
+
+
+				@(cross(V(clk)-latch,+1))begin
+						if(V(sigin)-V(sigref)+sigin_offset >0 ) 
+							out_val =sigout_high;
+						else
+							out_val =sigout_low;
+						end
+				V(sigout) <+ transition (out_val,tdel,trise,tfall);
+			end
+
+endmodule

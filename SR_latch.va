@@ -1,0 +1,55 @@
+// VerilogA for verilogA, SR_Latch1, veriloga
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module SR_Latch1(data,q,qb);
+
+input  data;
+output q,qb;
+
+
+electrical data;
+electrical q,qb,set,reset;
+
+parameter real vth_pos = 1   from (0:1.2);
+parameter real vth_neg = 0.2 from (0:1.2);
+parameter real vdd = 1.2;
+parameter real gnd = 0;
+parameter real SR = 1e8 from (0:inf);
+
+real set_val,reset_val,q_val,qb_val,vq,vqb;
+
+	analog begin
+		@(cross (V(data)-vth_pos,1)) begin
+			set_val   = 1;
+			reset_val = 0;
+		end
+		@(cross (V(data)-vth_neg,-1)) begin
+			set_val   = 0;
+			reset_val = 1;
+		end
+
+		if(V(data)>0.9) begin
+			set_val   = 1;
+			reset_val = 0;
+			q_val  = vdd;
+			qb_val = gnd;
+		end
+
+		if(V(data)<0.1) begin
+			set_val   = 0;
+			reset_val = 1;
+			q_val  = gnd;
+			qb_val = vdd;
+		end
+	
+	
+	
+	V(q)  <+ slew (q_val,SR,-1*SR);
+	V(qb) <+ slew (qb_val,SR,-1*SR);
+	$bound_step (0.001/100);
+	
+end
+endmodule
+
