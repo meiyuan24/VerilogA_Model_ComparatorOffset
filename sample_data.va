@@ -1,0 +1,39 @@
+// VerilogA for verilogA, sample_data, veriloga
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module sample_data(clk,in,out);
+
+input   	clk,in;
+output  	out;
+electrical	clk,in,out; 
+
+parameter real vth = 0.6;
+integer	  out_file;
+real 	  sig_out;
+
+	analog begin
+		@(initial_step) begin
+			out_file = $fopen("./saved_data.txt","a");
+			end
+
+		@(cross(V(clk)-vth ,1)) begin
+
+//			$strobe("Cross Time = %e \n",$abstime);
+//			out_file = $abstime ;
+			sig_out = V(in);
+//			$fstrobe(out_file,"%f",sig_out);
+			$fwrite(out_file,"%e \n",sig_out);
+			end
+
+		@(final_step) begin
+			$fclose(out_file);
+		end
+	
+	V(out) <+ sig_out;
+	end
+
+
+endmodule
+
